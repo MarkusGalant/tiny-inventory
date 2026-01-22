@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider     = "prisma-client"
+    output       = "../src/prisma/generated"
+    moduleFormat = "cjs"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+model Store {
+    id            String         @id @default(uuid())
+    name          String
+    address       String?
+    createdAt     DateTime       @default(now())
+    updatedAt     DateTime       @updatedAt
+    storeProducts StoreProduct[]
+
+    @@index([name])
+    @@map("stores")
+}
+
+model Product {
+    id            String         @id @default(uuid())
+    name          String
+    category      String
+    price         Decimal        @db.Decimal(10, 2)
+    stockQuantity Int            @default(0)
+    createdAt     DateTime       @default(now())
+    updatedAt     DateTime       @updatedAt
+    storeProducts StoreProduct[]
+
+    @@index([category])
+    @@index([name])
+    @@map("products")
+}
+
+model StoreProduct {
+    storeId   String
+    productId String
+    store     Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+    product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+    @@id([storeId, productId])
+    @@index([storeId])
+    @@index([productId])
+    @@map("store_products")
+}
+
+model AuditLog {
+    id         String   @id @default(uuid())
+    eventType  String
+    entityType String
+    entityId   String
+    changes    Json?
+    metadata   Json?
+    createdAt  DateTime @default(now())
+
+    @@index([eventType])
+    @@index([entityType, entityId])
+    @@index([createdAt])
+    @@map("audit_logs")
+}
